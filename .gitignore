@@ -1,0 +1,8 @@
+.venv/
+mise.local.toml
+*.session
+*.txt
+*.mp3
+*.mp4
+.vscode/
+__pycache__/
