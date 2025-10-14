@@ -22,4 +22,4 @@ run = """uv run --script telegram_voice_relay.py {{env.TG_CHAT}} \
 """
 
 [tasks.generate_black_video]
-run = "ffmpeg -y -f lavfi -i color=c=black:s=640x360:r=2 -t 30 -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 60 black-loop.mp4"
+run = "ffmpeg -y -f lavfi -i color=c=black:s=1280x720:r=30 -t 30 -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 black-loop.mp4"
