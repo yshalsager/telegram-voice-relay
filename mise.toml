@@ -17,8 +17,8 @@ run = "uv run --script telegram_voice_relay.py {{env.TG_CHAT}} --output talk.mp3
 run = """uv run --script telegram_voice_relay.py {{env.TG_CHAT}} \
   --quality low \
   --live-cmd "ffmpeg -f s16le -ar {sample_rate} -ac {channels} -i pipe:0 \
-      -stream_loop -1 -i black-loop.mp4 -c:v copy \
-      -c:a aac -b:a 64k -threads 1 -f flv {{env.STREAM_SERVER}}{{env.STREAM_KEY}}"
+      -stream_loop -1 -i {{option(name="video", default="black-loop.mp4")}} -c:v copy \
+      -c:a aac -b:a 64k -f flv {{env.STREAM_SERVER}}{{env.STREAM_KEY}}"
 """
 
 [tasks.generate_black_video]
