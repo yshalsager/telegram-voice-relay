@@ -272,7 +272,8 @@ async def record_call(args: argparse.Namespace) -> None:
                     f"Failed to start live command '{formatted_cmd}': {exc}"
                 ) from exc
 
-            live_queue = asyncio.Queue(maxsize=64)
+            live_queue = asyncio.Queue(maxsize=256)
+            live_queue_warned = False
             live_active = True
 
             async def pump_live() -> None:
@@ -325,6 +326,7 @@ async def record_call(args: argparse.Namespace) -> None:
 
             @call.on_update(stream_filter)
             async def _forward_stream(_: PyTgCalls, update: StreamFrames) -> None:  # noqa: ANN001
+                nonlocal live_queue_warned
                 if not live_active or live_queue is None:
                     return
                 for frame in update.frames:
@@ -337,9 +339,22 @@ async def record_call(args: argparse.Namespace) -> None:
                     try:
                         live_queue.put_nowait(frame.frame)
                     except asyncio.QueueFull:
-                        logging.warning(
-                            "Dropping audio frame: live consumer is too slow."
-                        )
+                        if not live_queue_warned:
+                            live_queue_warned = True
+                            logging.warning(
+                                "Dropping audio frame: live consumer is too slow (queue size=%d).",
+                                live_queue.maxsize,
+                            )
+                    else:
+                        if (
+                            live_queue_warned
+                            and live_queue.qsize() < live_queue.maxsize // 2
+                        ):
+                            logging.info(
+                                "Live handoff consumer caught up; queue depth %d.",
+                                live_queue.qsize(),
+                            )
+                            live_queue_warned = False
 
         config = GroupCallConfig(
             invite_hash=args.invite_hash,

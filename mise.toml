@@ -16,7 +16,7 @@ run = "uv run --script telegram_voice_relay.py {{env.TG_CHAT}} --output talk.mp3
 [tasks.telegram_to_youtube]
 run = """uv run --script telegram_voice_relay.py {{env.TG_CHAT}} \
   --quality low \
-  --live-cmd "ffmpeg -f s16le -ar {sample_rate} -ac {channels} -i pipe:0 \
+  --live-cmd "scripts/restream.sh {sample_rate} {channels} \
       -stream_loop -1 -i {{option(name="video", default="black-loop.mp4")}} -c:v copy \
       -c:a aac -b:a 64k -f flv {{env.STREAM_SERVER}}{{env.STREAM_KEY}}"
 """
@@ -24,7 +24,7 @@ run = """uv run --script telegram_voice_relay.py {{env.TG_CHAT}} \
 [tasks.generate_black_video]
 description = "Generate a solid color looped MP4"
 run = """
-ffmpeg -y -f lavfi -i color=c={{option(name="color", default="black")}}:s={{option(name="size", default="1280x720")}}:r={{option(name="fps", default="30")}} \
+ffmpeg -hide_banner -y -f lavfi -i color=c={{option(name="color", default="black")}}:s={{option(name="size", default="1280x720")}}:r={{option(name="fps", default="30")}} \
   -t {{option(name="duration", default="30")}} \
   -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 \
   {{option(name="output", default="black-loop.mp4")}}
@@ -33,7 +33,7 @@ ffmpeg -y -f lavfi -i color=c={{option(name="color", default="black")}}:s={{opti
 [tasks.generate_image_video]
 description = "Generate a looped MP4 from a still image"
 run = """
-ffmpeg -y -loop 1 -i {{arg(name="image")}} -c:v libx264 -preset veryfast \
+ffmpeg -hide_banner -y -loop 1 -i {{arg(name="image")}} -c:v libx264 -preset veryfast \
   -t {{option(name="duration", default="30")}} \
   -r {{option(name="fps", default="30")}} \
   -s {{option(name="size", default="1280x720")}} \
