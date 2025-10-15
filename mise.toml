@@ -22,4 +22,21 @@ run = """uv run --script telegram_voice_relay.py {{env.TG_CHAT}} \
 """
 
 [tasks.generate_black_video]
-run = "ffmpeg -y -f lavfi -i color=c=black:s=1280x720:r=30 -t 30 -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 black-loop.mp4"
+description = "Generate a solid color looped MP4"
+run = """
+ffmpeg -y -f lavfi -i color=c={{option(name="color", default="black")}}:s={{option(name="size", default="1280x720")}}:r={{option(name="fps", default="30")}} \
+  -t {{option(name="duration", default="30")}} \
+  -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 \
+  {{option(name="output", default="black-loop.mp4")}}
+"""
+
+[tasks.generate_image_video]
+description = "Generate a looped MP4 from a still image"
+run = """
+ffmpeg -y -loop 1 -i {{arg(name="image")}} -c:v libx264 -preset veryfast \
+  -t {{option(name="duration", default="30")}} \
+  -r {{option(name="fps", default="30")}} \
+  -s {{option(name="size", default="1280x720")}} \
+  -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 -an \
+  {{option(name="output", default="image-loop.mp4")}}
+"""
