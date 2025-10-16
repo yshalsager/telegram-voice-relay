@@ -336,25 +336,22 @@ async def record_call(args: argparse.Namespace) -> None:
                         or live_proc.stdin.is_closing()
                     ):
                         return
-                    try:
-                        live_queue.put_nowait(frame.frame)
-                    except asyncio.QueueFull:
-                        if not live_queue_warned:
-                            live_queue_warned = True
-                            logging.warning(
-                                "Dropping audio frame: live consumer is too slow (queue size=%d).",
-                                live_queue.maxsize,
-                            )
-                    else:
-                        if (
-                            live_queue_warned
-                            and live_queue.qsize() < live_queue.maxsize // 2
-                        ):
-                            logging.info(
-                                "Live handoff consumer caught up; queue depth %d.",
-                                live_queue.qsize(),
-                            )
-                            live_queue_warned = False
+                    if (
+                        live_queue_warned
+                        and live_queue.qsize() < live_queue.maxsize // 2
+                    ):
+                        logging.info(
+                            "Live handoff consumer caught up; queue depth %d.",
+                            live_queue.qsize(),
+                        )
+                        live_queue_warned = False
+                    if live_queue.full() and not live_queue_warned:
+                        live_queue_warned = True
+                        logging.warning(
+                            "Live audio queue is full; waiting for consumer (size=%d).",
+                            live_queue.maxsize,
+                        )
+                    await live_queue.put(frame.frame)
 
         config = GroupCallConfig(
             invite_hash=args.invite_hash,

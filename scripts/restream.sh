@@ -11,6 +11,7 @@ shift
 channels="$1"
 shift
 queue_size="${THREAD_QUEUE_SIZE:-1024}"
+retry_delay="${FFMPEG_RESTART_DELAY:-0.5}"
 
 # Preserve the incoming PCM stream on fd 3 so ffmpeg restarts keep reading it.
 exec 3<&0
@@ -22,6 +23,6 @@ while true; do
     -f s16le -ar "$sample_rate" -ac "$channels" -i pipe:3 \
     "$@"
   status=$?
-  printf 'ffmpeg exited (%s); retrying in 2s\n' "$status" >&2
-  sleep 2
+  printf 'ffmpeg exited (%s); retrying in %ss\n' "$status" "$retry_delay" >&2
+  sleep "$retry_delay"
 done
