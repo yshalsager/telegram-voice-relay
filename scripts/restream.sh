@@ -18,11 +18,14 @@ exec 3<&0
 trap '' PIPE
 
 while true; do
-  ffmpeg -hide_banner -loglevel info \
+  if ffmpeg -hide_banner -loglevel info \
     -thread_queue_size "$queue_size" \
     -f s16le -ar "$sample_rate" -ac "$channels" -i pipe:3 \
-    "$@"
-  status=$?
+    "$@"; then
+    status=0
+  else
+    status=$?
+  fi
   printf 'ffmpeg exited (%s); retrying in %ss\n' "$status" "$retry_delay" >&2
   sleep "$retry_delay"
 done
